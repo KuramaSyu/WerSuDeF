@@ -27,7 +27,7 @@ class NotesService:
     def __init__(self):
         self.conn = psycopg.connect("dbname=notes user=postgres password=postgres host=localhost")
 
-    def AddNote(self, request: NoteRequest, context) -> NoteResponse:
+    def AddNote(self, request: NoteRequest) -> NoteResponse:
         vec = embed(request.content)
         with self.conn.cursor() as cur:
             cur.execute(
@@ -41,7 +41,7 @@ class NotesService:
             self.conn.commit()
         return NoteResponse(note_id, request.content)
 
-    def SearchNotes(self, request, context):
+    def SearchNotes(self, request):
         vec = embed(request.query)
         with self.conn.cursor() as cur:
             cur.execute(
