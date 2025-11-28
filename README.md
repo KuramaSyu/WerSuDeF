@@ -12,3 +12,7 @@
     cd src
     python -m grpc_tools.protoc -I grpc/proto --python_out grpc/generated --grpc_python_out=grpc/generated note.proto
     ``` 
+    or
+    ```bash
+    python -m grpc_tools.protoc   -I grpc/proto   --python_out=grpc/generated   --grpc_python_out=grpc/generated   --mypy_out=grpc/generated   note.proto
+    ```
