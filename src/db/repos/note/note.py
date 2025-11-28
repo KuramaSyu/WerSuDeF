@@ -67,7 +67,7 @@ class NoteRepoABC(ABC):
         Args:
         -----
         note: `NoteMetadataEntity`
-            the note of a note
+            the note
 
         Returns:
         --------
@@ -87,12 +87,14 @@ class NoteRepoABC(ABC):
         Args:
         -----
         note: `NoteMetadataEntity`
-            the note of a note
+            the note
 
+            
         Returns:
         --------
         `NoteMetadataEntity`:
             the updated entity
+            
         """
         ...
 
