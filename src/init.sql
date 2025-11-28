@@ -22,10 +22,10 @@ CREATE TABLE IF NOT EXISTS note.embedding (
     PRIMARY KEY(note_id, model)
 );
 
-CREATE TABLE IF NOT EXISTS note.rules (
+CREATE TABLE IF NOT EXISTS note.permission (
     note_id BIGINT REFERENCES note.metadata(id),
-    editor_id BIGINT,
-    PRIMARY KEY(note_id, editor_id)
+    role_id BIGINT REFERENCES role.metadata(id),
+    PRIMARY KEY(note_id, role_id)
 );
 
 
@@ -37,10 +37,10 @@ CREATE TABLE IF NOT EXISTS role.metadata (
 );
 
 CREATE TABLE IF NOT EXISTS role.permission (
+    id SERIAL PRIMARY KEY,
     role_id BIGINT REFERENCES role.metadata(id),
-    note_id BIGINT REFERENCES note.content(id),
-    permission SMALLINT, -- like UNIX with rwx
-    PRIMARY KEY (role_id, note_id)
+    note_id BIGINT REFERENCES note.content(id) NULL, -- NULL for default permissions
+    permission SMALLINT -- like UNIX with rwx
 );
 
 CREATE TABLE IF NOT EXISTS role.member (
