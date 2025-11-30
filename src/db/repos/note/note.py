@@ -6,7 +6,7 @@ from db.database import Database
 
 
 class NoteRepoABC(ABC):
-
+    """Represents the ABC for note-operations which operate over multiple relations"""
     @property
     def embedding_table(self) -> str:
         return "note.embedding"
@@ -24,7 +24,8 @@ class NoteRepoABC(ABC):
         self,
         note: NoteEntity,
     ) -> NoteEntity:
-        """inserts note
+        """inserts a full note into 
+        all 3 relations used for this
         
         Args:
         -----
@@ -161,7 +162,7 @@ class NotePostgreRepo(NoteRepoABC):
         return await self._db.fetch(
             query,
             note.note_id
-        )
+        )  # type: ignore
     
 
 
