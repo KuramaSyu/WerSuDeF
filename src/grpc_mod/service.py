@@ -1,9 +1,12 @@
+from datetime import datetime
+
 from grpc.aio import ServicerContext
 
 from db.repos import NoteRepoABC
 from db.entities import NoteEntity
 from grpc_mod.proto.note_pb2 import GetNoteRequest, NoteEmbedding, NotePermission, PostNoteRequest, Note
 from grpc_mod.proto.note_pb2_grpc import NoteService, NoteServiceServicer
+from grpc_mod.converter import to_grpc_note
 
 
 class GRPCNoteService(NoteServiceServicer):
@@ -14,7 +17,7 @@ class GRPCNoteService(NoteServiceServicer):
     def __init__(self, repo: NoteRepoABC):
         self.repo = repo
 
-    async def get_note(self, request: GetNoteRequest, ctx: ServicerContext) -> Note:
+    async def GetNote(self, request: GetNoteRequest, context: ServicerContext) -> Note:
         note_entity = await self.repo.select(note=NoteEntity(
             note_id=request.id,
             author_id=None,
@@ -50,5 +53,16 @@ class GRPCNoteService(NoteServiceServicer):
 
         )
 
-    async def post_note(self, request: PostNoteRequest, ctx: ServicerContext) -> Note:
-        ...
+    async def PostNote(self, request: PostNoteRequest, context: ServicerContext) -> Note:
+        note_entity = await self.repo.insert(
+            NoteEntity(
+                note_id=None,
+                author_id=request.author_id,
+                content=request.content.value,
+                embeddings=[],
+                permissions=[],
+                title=request.title.value,
+                updated_at=datetime.now(),
+            )
+        )
+        return to_grpc_note(note_entity)
