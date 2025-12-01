@@ -113,7 +113,7 @@ class NotePostgreRepo(NoteRepoABC):
         note_id: int = await self._db.fetch(
             query, 
             note.title, note.content, note.updated_at, note.author_id
-        )[0]  # type: ignore
+        )[0] 
 
         # insert embeddings
         query = f"""
@@ -125,7 +125,7 @@ class NotePostgreRepo(NoteRepoABC):
             await self._db.execute(
                 query,
                 note_id, embedding
-            )  # type: ignore
+            )
         
         # insert permissions
         query = f"""
@@ -137,7 +137,7 @@ class NotePostgreRepo(NoteRepoABC):
             await self._db.execute(
                 query,
                 note_id, permission.role_id
-            )  # type: ignore
+            )
         return note
     
     async def update(self, note):
@@ -162,7 +162,7 @@ class NotePostgreRepo(NoteRepoABC):
         return await self._db.fetch(
             query,
             note.note_id
-        )  # type: ignore
+        )
     
 
 
