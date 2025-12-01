@@ -1,16 +1,16 @@
 import grpc
-from grpc_mod import NoteService
+from grpc_mod import NoteService, GetNoteRequest, PostNoteRequest, NoteServiceStub
 from google.protobuf.wrappers_pb2 import Int32Value, StringValue
 
 def get_note(stub, note_id):
-    request = note_pb2.GetNoteRequest(id=note_id)
+    request = GetNoteRequest(id=note_id)
     response = stub.GetNote(request)
     print("GetNote response:")
     print(response)
     return response
 
 def post_note(stub, note_id=None, title=None, content=None, author_id=1):
-    request = note_pb2.PostNoteRequest(
+    request = PostNoteRequest(
         id=Int32Value(value=note_id) if note_id is not None else None,
         title=StringValue(value=title) if title is not None else None,
         content=StringValue(value=content) if content is not None else None,
@@ -25,7 +25,7 @@ def post_note(stub, note_id=None, title=None, content=None, author_id=1):
 def main():
     # Connect to server
     channel = grpc.insecure_channel("localhost:50051")
-    stub = note_pb2_grpc.NoteServiceStub(channel)
+    stub = NoteServiceStub(channel)
 
     # Test: create/update note
     print("Posting note...")
