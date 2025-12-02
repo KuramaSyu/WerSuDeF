@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 from db.entities import NoteEntity
 
-from db.database import Database
+from db import Database
 
 
 class NoteRepoABC(ABC):
