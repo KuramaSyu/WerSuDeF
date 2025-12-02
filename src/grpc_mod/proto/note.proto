@@ -1,6 +1,5 @@
 syntax = "proto3";
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/wrappers.proto";
 
 package note;
 
@@ -31,10 +30,16 @@ message NotePermission {
 
 // Request to add/Update a note
 message PostNoteRequest {
-    optional google.protobuf.Int32Value id = 1;
-    google.protobuf.StringValue title = 2;
-    google.protobuf.StringValue content = 3;
-    int32 author_id = 4;
+    string title = 1;
+    optional string content = 2;
+    int32 author_id = 3;
+}
+
+message AlterNoteRequest {
+    int32 id = 1;
+    optional string title = 2;
+    optional string content = 3;
+    optional int32 author_id = 4;
 }
 
 // Note Service
