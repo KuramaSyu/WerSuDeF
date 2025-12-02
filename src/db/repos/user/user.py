@@ -38,6 +38,7 @@ class UserRepoABC(ABC):
 
 
 class UserPostgresRepo(UserRepoABC):
+    """Provides an impementation using Postgres as the backend database"""
     def __init__(self, db: Database):
         self.db = db
 
