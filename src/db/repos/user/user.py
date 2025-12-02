@@ -37,7 +37,7 @@ class UserRepoABC(ABC):
         pass
 
 
-class UserRepository(UserRepoABC):
+class UserPostgresRepo(UserRepoABC):
     def __init__(self, db: Database):
         self.db = db
 
