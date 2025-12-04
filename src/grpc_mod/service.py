@@ -29,7 +29,7 @@ class GrpcNoteService(NoteServiceServicer):
 
     def __init__(self, repo: NoteRepoABC, log: loggingProvider):
         self.repo = repo
-        self.log = log(__file__, self)
+        self.log = log(__name__, self)
 
     async def GetNote(self, request: GetNoteRequest, context: ServicerContext) -> Note:
         note_entity = await self.repo.select(note=NoteEntity(
@@ -89,7 +89,7 @@ class GrpcUserService(UserServiceServicer):
 
     def __init__(self, user_repo: UserRepoABC, log: loggingProvider):
         self.repo = user_repo
-        self.log = log(__file__, self)
+        self.log = log(__name__, self)
 
     async def GetUser(self, request: GetUserRequest, context: ServicerContext) -> User:
         if request.HasField("id"):
@@ -126,7 +126,7 @@ class GrpcUserService(UserServiceServicer):
                     avatar_url=request.avatar_url,
                 )
             )
-            print(f"Created user entity: {user_entity}")
+            self.log.debug(f"Created user entity: {user_entity}")
             return to_grpc_user(user_entity)
         except Exception:
             self.log.error(f"Error creating user: {traceback.format_exc()}")
