@@ -6,6 +6,7 @@ from typing import Callable, Optional
 
 import grpc
 from grpc.aio import ServicerContext
+import asyncpg
 
 from api import loggingProvider
 from db.repos import NoteRepoABC
@@ -69,18 +70,28 @@ class GrpcNoteService(NoteServiceServicer):
         )
 
     async def PostNote(self, request: PostNoteRequest, context: ServicerContext) -> Note:
-        note_entity = await self.repo.insert(
-            NoteEntity(
-                note_id=None,
-                author_id=request.author_id,
-                content=request.content,
-                embeddings=[],
-                permissions=[],
-                title=request.title,
-                updated_at=datetime.now(),
+        try:
+            note_entity = await self.repo.insert(
+                NoteEntity(
+                    note_id=None,
+                    author_id=request.author_id,
+                    content=request.content,
+                    embeddings=[],
+                    permissions=[],
+                    title=request.title,
+                    updated_at=datetime.now(),
+                )
             )
-        )
-        return to_grpc_note(note_entity)
+            return to_grpc_note(note_entity)
+        except asyncpg.UniqueViolationError as e:
+            context.set_code(grpc.StatusCode.ALREADY_EXISTS)
+            context.set_details(f"Insertion error: {e}")
+            return Note()
+        except Exception:
+            self.log.error(f"Error creating note: {traceback.format_exc()}")
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details("Internal server error while creating note")
+            return Note()
 
 class GrpcUserService(UserServiceServicer):
     """
@@ -128,6 +139,10 @@ class GrpcUserService(UserServiceServicer):
             )
             self.log.debug(f"Created user entity: {user_entity}")
             return to_grpc_user(user_entity)
+        except asyncpg.UniqueViolationError:
+            context.set_code(grpc.StatusCode.ALREADY_EXISTS)
+            context.set_details("User with the given discord_id already exists")
+            return User()
         except Exception:
             self.log.error(f"Error creating user: {traceback.format_exc()}")
             context.set_code(grpc.StatusCode.INTERNAL)
