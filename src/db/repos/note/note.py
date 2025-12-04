@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from db.entities import NoteEntity
 
+import asyncpg
+
+from db.entities import NoteEntity
 from db import Database
 
 
@@ -110,10 +112,10 @@ class NotePostgreRepo(NoteRepoABC):
         VALUES ($1, $2, $3, $4)
         RETURNING id
         """
-        note_id: int = (await self._db.fetch(
+        note_id: int = (await self._db.fetchrow(
             query, 
             note.title, note.content, note.updated_at, note.author_id
-        ))[0] 
+        ))["id"] 
 
         # insert embeddings
         query = f"""
@@ -138,6 +140,7 @@ class NotePostgreRepo(NoteRepoABC):
                 query,
                 note_id, permission.role_id
             )
+        note.note_id = note_id
         return note
     
     async def update(self, note):
