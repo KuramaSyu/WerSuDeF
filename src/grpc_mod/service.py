@@ -1,8 +1,13 @@
 from datetime import datetime
 import traceback
+from logging import getLogger
+import logging
+from typing import Callable, Optional
+
 import grpc
 from grpc.aio import ServicerContext
 
+from api import loggingProvider
 from db.repos import NoteRepoABC
 from db.entities import NoteEntity
 from grpc_mod import (
@@ -17,13 +22,14 @@ from grpc_mod.converter import to_grpc_note, to_grpc_user
 from db import UserRepoABC, UserEntity
 
 
-class GRPCNoteService(NoteServiceServicer):
+class GrpcNoteService(NoteServiceServicer):
     """
     Implements the gRPC service defined in grpc/proto/note.proto
     """
 
-    def __init__(self, repo: NoteRepoABC):
+    def __init__(self, repo: NoteRepoABC, log: loggingProvider):
         self.repo = repo
+        self.log = log(__file__, self)
 
     async def GetNote(self, request: GetNoteRequest, context: ServicerContext) -> Note:
         note_entity = await self.repo.select(note=NoteEntity(
@@ -76,13 +82,14 @@ class GRPCNoteService(NoteServiceServicer):
         )
         return to_grpc_note(note_entity)
 
-class GRPCUserService(UserServiceServicer):
+class GrpcUserService(UserServiceServicer):
     """
     Implements the gRPC service defined in grpc/proto/user.proto
     """
 
-    def __init__(self, user_repo: UserRepoABC):
+    def __init__(self, user_repo: UserRepoABC, log: loggingProvider):
         self.repo = user_repo
+        self.log = log(__file__, self)
 
     async def GetUser(self, request: GetUserRequest, context: ServicerContext) -> User:
         if request.HasField("id"):
@@ -121,5 +128,8 @@ class GRPCUserService(UserServiceServicer):
             )
             print(f"Created user entity: {user_entity}")
             return to_grpc_user(user_entity)
-        except Exception as e:
-            traceback.print_exc()
+        except Exception:
+            self.log.error(f"Error creating user: {traceback.format_exc()}")
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details("Internal server error while creating user")
+            return User()
