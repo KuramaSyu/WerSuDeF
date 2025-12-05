@@ -33,41 +33,47 @@ class GrpcNoteService(NoteServiceServicer):
         self.log = log(__name__, self)
 
     async def GetNote(self, request: GetNoteRequest, context: ServicerContext) -> Note:
-        note_entity = await self.repo.select(note=NoteEntity(
-            note_id=request.id,
-            author_id=None,
-            content=None,
-            embeddings=[],
-            permissions=[],
-            title=None,
-            updated_at=None
-        ))
-        assert (note_entity 
-            and note_entity.note_id 
-            and note_entity.author_id 
-            and note_entity.content 
-            and note_entity.title
-        )
+        try:
+            note_entity = await self.repo.select(note=NoteEntity(
+                note_id=request.id,
+                author_id=None,
+                content=None,
+                embeddings=[],
+                permissions=[],
+                title=None,
+                updated_at=None
+            ))
+            assert (note_entity 
+                and note_entity.note_id 
+                and note_entity.author_id 
+                and note_entity.content 
+                and note_entity.title
+            )
 
-        # conversion from note_entity to gRPC Note Message
-        return Note(
-            id=note_entity.note_id,
-            title=note_entity.title,
-            author_id=note_entity.author_id,
-            content=note_entity.content,
-            embeddings=[
-                NoteEmbedding(
-                    model=e.model,
-                    embedding=e.embedding,
-                ) for e in note_entity.embeddings
-            ],
-            permissions=[
-                NotePermission(
-                    role_id=p.role_id
-                ) for p in note_entity.permissions
-            ]
+            # conversion from note_entity to gRPC Note Message
+            return Note(
+                id=note_entity.note_id,
+                title=note_entity.title,
+                author_id=note_entity.author_id,
+                content=note_entity.content,
+                embeddings=[
+                    NoteEmbedding(
+                        model=e.model,
+                        embedding=e.embedding,
+                    ) for e in note_entity.embeddings
+                ],
+                permissions=[
+                    NotePermission(
+                        role_id=p.role_id
+                    ) for p in note_entity.permissions
+                ]
 
-        )
+            )
+        except Exception:
+            self.log.error(f"Error fetching note: {traceback.format_exc()}")
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details("Internal server error while fetching note")
+            return Note()
 
     async def PostNote(self, request: PostNoteRequest, context: ServicerContext) -> Note:
         try:
