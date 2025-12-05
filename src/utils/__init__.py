@@ -1,1 +1,1 @@
-from convert import asdict
+from .convert import asdict
