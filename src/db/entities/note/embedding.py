@@ -10,7 +10,7 @@ class NoteEmbeddingEntity:
     the embedding and the note it belongs to"""
     note_id: int
     model: UndefinedOr[str]
-    embedding: Sequence[float]
+    embedding: UndefinedOr[Sequence[float]]
 
 
 
