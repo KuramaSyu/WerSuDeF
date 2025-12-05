@@ -1,5 +1,6 @@
 import grpc
 from grpc_mod import NoteService, GetNoteRequest, PostNoteRequest, NoteServiceStub, PostUserRequest, UserServiceStub, GetUserRequest, User
+from grpc_mod.proto.note_pb2 import Note
 
 def get_note(stub, note_id):
     request = GetNoteRequest(id=note_id)
@@ -57,7 +58,7 @@ def main():
     user = get_user(UserServiceStub(channel), user_id=None, discord_id=987654321)
     # Test: create/update note
     print(f"Posting note for user with id {user.id}...")
-    resp = post_note(
+    resp: Note = post_note(
         stub,
         title="Hello World",
         content="This is a test note",
@@ -66,8 +67,8 @@ def main():
     print(f"Posted note, got: {resp}")
     
     # Test: fetch note
-    print("\nFetching note...")
-    get_note(stub, note_id=1)
+    print(f"\nFetching note ({resp.id})...")
+    get_note(stub, note_id=resp.id)
 
 if __name__ == "__main__":
     main()
