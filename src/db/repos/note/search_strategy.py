@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Self
 
 from asyncpg import Record
+from ai.embedding_generator import EmbeddingGenerator, Models
 from db.database import Database, DatabaseABC
 from db.entities import NoteEntity
 from db import TableABC
@@ -81,7 +82,7 @@ class DateNoteSearchStrategy(NoteSearchStrategy):
     
     async def search(self) -> list["NoteEntity"]:
         query = f"""
-        SELECT note_id, title, author_id, content, updated_at
+        SELECT id, title, author_id, content, updated_at
         FROM note.content
         ORDER BY updated_at DESC
         LIMIT {self.limit}
@@ -89,7 +90,7 @@ class DateNoteSearchStrategy(NoteSearchStrategy):
         """
         records = await self.db.fetch(query)
         if not records:
-            raise RuntimeError("Failed to fetch notes sorted by date.")
+            return []
         return [NoteEntity.from_record(record) for record in records]
 
 class TitleLexemeNoteSearchStrategy(NoteSearchStrategy):
@@ -97,7 +98,7 @@ class TitleLexemeNoteSearchStrategy(NoteSearchStrategy):
     
     async def search(self) -> list["NoteEntity"]:
         query = f"""
-        SELECT note_id, title, author_id, content, updated_at
+        SELECT id, title, author_id, content, updated_at
         FROM note.content
         WHERE to_tsvector('english', title) @@ to_tsquery('english', $1)
         ORDER BY ts_rank(to_tsvector('english', title), to_tsquery('english', $1)) DESC
@@ -114,7 +115,7 @@ class FuzzyTitleContentSearchStrategy(NoteSearchStrategy):
     
     async def search(self) -> list["NoteEntity"]:
         query = f"""
-        SELECT note_id, title, author_id, content, updated_at
+        SELECT id, title, author_id, content, updated_at
         FROM {self.db.name}
         ORDER BY similarity(title || ' ' || content, $1) DESC
         LIMIT {self.limit}
@@ -130,15 +131,21 @@ class ContextNoteSearchStrategy(NoteSearchStrategy):
     """Return notes based on semantic search using embeddings."""
     
     async def search(self) -> list["NoteEntity"]:
+        model = Models.MINI_LM_L6_V2
         query = f"""
-        SELECT note_id, title, author_id, content, updated_at, (embedding <=> $1::vector) AS similarity
+        SELECT id, title, author_id, content, updated_at, (embedding <=> $1::vector) AS similarity
         FROM note.embedding
-        JOIN note.content on note.content.id = note.embedding.note_id
+        JOIN 
+            note.content on note.content.id = note.embedding.note_id 
+            AND note.embedding.model = $2
         ORDER BY similarity ASC
         LIMIT {self.limit}
         OFFSET {self.offset}
         """
-        records = await self.db.fetch(query, self.query)
+        query_embedding = EmbeddingGenerator(model).generate(self.query)
+        query_embedding_str = EmbeddingGenerator.tensor_to_str_vec(query_embedding)
+        records = await self.db.fetch(query, query_embedding_str, model.value)
+        print(f"Context search records: {records}")
         if not records:
             raise RuntimeError("Failed to fetch notes by context.")
         return [NoteEntity.from_record(record) for record in records]
