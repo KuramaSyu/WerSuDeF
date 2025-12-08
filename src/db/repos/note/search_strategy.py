@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import List, Self
 
 from asyncpg import Record
@@ -144,8 +145,10 @@ class ContextNoteSearchStrategy(NoteSearchStrategy):
         """
         query_embedding = EmbeddingGenerator(model).generate(self.query)
         query_embedding_str = EmbeddingGenerator.tensor_to_str_vec(query_embedding)
+        start = datetime.now()
         records = await self.db.fetch(query, query_embedding_str, model.value)
         print(f"Context search records: {records}")
+        print(f"Context search took: {datetime.now() - start}")
         if not records:
             raise RuntimeError("Failed to fetch notes by context.")
         return [NoteEntity.from_record(record) for record in records]
