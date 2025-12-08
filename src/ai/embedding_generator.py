@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from sentence_transformers import SentenceTransformer
 import numpy as np
@@ -22,7 +23,9 @@ class EmbeddingGenerator:
         self.model = SentenceTransformer(model_name.value)
 
     def generate(self, text: str) -> Tensor:
+        start = datetime.now()
         embedding = self.model.encode(text)
+        print(f"Embedding generation took: {datetime.now() - start}")
         return embedding
 
     @staticmethod
