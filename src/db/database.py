@@ -1,5 +1,6 @@
+from abc import ABC, abstractmethod
 import functools
-from typing import Awaitable, Callable, Coroutine, Optional, List, Any
+from typing import Awaitable, Callable, Coroutine, Dict, Optional, List, Any
 import asyncpg
 from asyncpg import Pool, Connection, Record
 
@@ -45,8 +46,35 @@ def copy_docs(copy_from_func: Callable):
         return wrapper
     return decocator
 
+class DatabaseABC(ABC):
+    """Abstract Base Class for Database connections."""
+    @abstractmethod
+    async def init_db(self):
+        """Initializes the database connection pool."""
+        ...
 
-class Database(metaclass=SingletonMeta):
+    @property
+    @abstractmethod
+    def pool(self) -> asyncpg.Pool:
+        """Returns the database connection pool."""
+        ...
+    
+    @abstractmethod
+    async def execute(self, query: str, *args: List[Any]) -> str:
+        """Executes an SQL command (or commands)."""
+        ...
+    
+    @abstractmethod
+    async def fetch(self, query: str, *args: List[Any]) -> List[Dict]:
+        """Fetches multiple records from the database."""
+        ...
+    
+    @abstractmethod
+    async def fetchrow(self, query: str, *args: List[Any]) -> Optional[Dict]:
+        """Fetches a single record from the database."""
+        ...
+    
+class Database(DatabaseABC):
     _instance: Optional["Database"] = None
     def __init__(self, dsn: str):
         self._pool: Optional[Pool] = None
