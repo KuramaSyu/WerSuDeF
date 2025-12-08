@@ -2,7 +2,7 @@ from datetime import datetime
 import traceback
 from logging import getLogger
 import logging
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 
 import grpc
 from grpc.aio import ServicerContext
@@ -18,10 +18,12 @@ from grpc_mod import (
     NoteService, NoteServiceServicer,
     UserServiceServicer, GetUserRequest, User, 
     AlterUserRequest, DeleteUserRequest, 
-    DeleteUserResponse, PostUserRequest
+    DeleteUserResponse, PostUserRequest,
+    SearchNote
 )
 from grpc_mod.converter import to_grpc_note, to_grpc_user
 from db import UserRepoABC, UserEntity
+from grpc_mod.proto.note_pb2 import GetSearchNotesRequest, MinimalNote
 
 
 class GrpcNoteService(NoteServiceServicer):
@@ -104,6 +106,9 @@ class GrpcNoteService(NoteServiceServicer):
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details("Internal server error while creating note")
             return Note()
+
+    async def SearchNotes(self, request: GetSearchNotesRequest, context: ServicerContext) -> List[MinimalNote]:
+        ...
 
 class GrpcUserService(UserServiceServicer):
     """
