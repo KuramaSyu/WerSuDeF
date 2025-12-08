@@ -2,7 +2,7 @@ from datetime import datetime
 import traceback
 from logging import getLogger
 import logging
-from typing import Callable, List, Optional
+from typing import AsyncIterator, Callable, List, Optional
 
 import grpc
 from grpc.aio import ServicerContext
@@ -108,16 +108,18 @@ class GrpcNoteService(NoteServiceServicer):
             context.set_details("Internal server error while creating note")
             return Note()
 
-    async def SearchNotes(self, request: GetSearchNotesRequest, context: ServicerContext) -> List[MinimalNote]:
+    async def SearchNotes(
+        self, request: GetSearchNotesRequest, context: ServicerContext
+    ) -> AsyncIterator[MinimalNote]:
         notes = await self.repo.search_notes(
-            to_search_type(request.search_type), 
-            request.query, 
-            request.limit, 
-            request.offset
+            to_search_type(request.search_type),
+            request.query,
+            request.limit,
+            request.offset,
         )
-        ret_val = [to_grpc_minimal_note(note) for note in notes]
-        print(f"SearchNotes returning {ret_val} notes")
-        return ret_val
+        for note in notes:
+            yield to_grpc_minimal_note(note)
+
 
 class GrpcUserService(UserServiceServicer):
     """
