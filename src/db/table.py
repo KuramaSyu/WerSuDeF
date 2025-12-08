@@ -84,7 +84,8 @@ class TableABC(Protocol, Generic[TReturn]):
         >>> table = Table('users', logging_provider, db)
         >>> await table.insert(where={'name': 'John', 'email': 'john@example.com'})
     """
-    
+    # table name
+    name: str
     def return_as_dataframe(self, b: bool) -> None:
         """Configure whether query results should be returned as pandas DataFrame.
         
@@ -333,7 +334,7 @@ class TableABC(Protocol, Generic[TReturn]):
         Example:
             >>> await table.execute('DELETE FROM logs WHERE created_at < $1', cutoff_date)
         """
-        ...
+        return await self.fetch(sql, *args)
     
     @staticmethod
     def create_where_statement(columns: List[str], dollar_start: int = 1) -> str:
