@@ -12,6 +12,7 @@ from api import loggingProvider
 from api.undefined import UNDEFINED
 from db.repos import NoteRepoFacadeABC
 from db.entities import NoteEntity
+from db.repos.note.note import SearchType
 from grpc_mod import (
     GetNoteRequest, NoteEmbedding, 
     NotePermission, PostNoteRequest, Note,
@@ -19,10 +20,10 @@ from grpc_mod import (
     UserServiceServicer, GetUserRequest, User, 
     AlterUserRequest, DeleteUserRequest, 
     DeleteUserResponse, PostUserRequest,
-    SearchNote
 )
 from grpc_mod.converter import to_grpc_note, to_grpc_user
 from db import UserRepoABC, UserEntity
+from grpc_mod.converter.note_entity_converter import to_grpc_minimal_note, to_search_type
 from grpc_mod.proto.note_pb2 import GetSearchNotesRequest, MinimalNote
 
 
@@ -108,7 +109,15 @@ class GrpcNoteService(NoteServiceServicer):
             return Note()
 
     async def SearchNotes(self, request: GetSearchNotesRequest, context: ServicerContext) -> List[MinimalNote]:
-        ...
+        notes = await self.repo.search_notes(
+            to_search_type(request.search_type), 
+            request.query, 
+            request.limit, 
+            request.offset
+        )
+        ret_val = [to_grpc_minimal_note(note) for note in notes]
+        print(f"SearchNotes returning {ret_val} notes")
+        return ret_val
 
 class GrpcUserService(UserServiceServicer):
     """
