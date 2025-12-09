@@ -78,6 +78,7 @@ class NoteSearchStrategy(ABC):
         """
         ...
 
+
 class DateNoteSearchStrategy(NoteSearchStrategy):
     """Return notes sorted by date (most recent first)."""
     
@@ -93,6 +94,7 @@ class DateNoteSearchStrategy(NoteSearchStrategy):
         if not records:
             return []
         return [NoteEntity.from_record(record) for record in records]
+
 
 class TitleLexemeNoteSearchStrategy(NoteSearchStrategy):
     """Return notes where the title is matched by lexemes in the query"""
@@ -111,13 +113,14 @@ class TitleLexemeNoteSearchStrategy(NoteSearchStrategy):
             raise RuntimeError("Failed to fetch notes by exact title.")
         return [NoteEntity.from_record(record) for record in records]
     
+
 class FuzzyTitleContentSearchStrategy(NoteSearchStrategy):
     """Return notes where the title or content is similar to the query"""
     
     async def search(self) -> list["NoteEntity"]:
         query = f"""
         SELECT id, title, author_id, content, updated_at
-        FROM {self.db.name}
+        FROM note.content
         ORDER BY similarity(title || ' ' || content, $1) DESC
         LIMIT {self.limit}
         OFFSET {self.offset};

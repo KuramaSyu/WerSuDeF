@@ -1,3 +1,4 @@
+from abc import ABC, abstractclassmethod, abstractmethod, abstractstaticmethod
 from datetime import datetime
 from enum import Enum
 from sentence_transformers import SentenceTransformer
@@ -5,7 +6,7 @@ import numpy as np
 from typing import List, Any, Sequence
 
 from torch import Tensor
-
+from api import loggingProvider
 model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
 
@@ -17,16 +18,13 @@ class Models(Enum):
     PARAPHRASE_MPNET_BASE_V2 = "sentence-transformers/paraphrase-mpnet-base-v2"
     DISTILBERT_BASE_NLI_STSB_ELECTRA = "sentence-transformers/distilbert-base-nli-stsb-mean-tokens"
 
-class EmbeddingGenerator:
-    """Generates embeddings for given text using specified model."""
-    def __init__(self, model_name: Models):
-        self.model = SentenceTransformer(model_name.value)
+class EmbeddingGeneratorABC(ABC):
+    """Abstract base class for embedding generators."""
 
+
+    @abstractmethod
     def generate(self, text: str) -> Tensor:
-        start = datetime.now()
-        embedding = self.model.encode(text)
-        print(f"Embedding generation took: {datetime.now() - start}")
-        return embedding
+        pass
 
     @staticmethod
     def tensor_to_str_vec(tensor: Tensor) -> str:
@@ -50,3 +48,14 @@ class EmbeddingGenerator:
         - 2-D tensor `[[1, 2], [3, 4]]` -> `"[[1,2],[3,4]]"`
         """
         return f"[{','.join(str(x) for x in tensor.tolist())}]"
+
+class EmbeddingGenerator(EmbeddingGeneratorABC):
+    """Generates embeddings for given text using specified model."""
+    def __init__(self, model_name: Models, loggging_provider: ):
+        self.model = SentenceTransformer(model_name.value)
+
+    def generate(self, text: str) -> Tensor:
+        start = datetime.now()
+        embedding = self.model.encode(text)
+        print(f"Embedding generation took: {datetime.now() - start}")
+        return embedding

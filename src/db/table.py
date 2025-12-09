@@ -11,7 +11,7 @@ from pandas import DataFrame
 import asyncpg
 from asyncpg import Record
 
-from api.types import loggingProvider
+from api.types import LoggingProvider
 from db.database import Database
 
 TReturn = TypeVar('TReturn', List[Record], pd.DataFrame, covariant=True)
@@ -403,7 +403,7 @@ class Table(TableABC):
     def __init__(
         self, 
         table_name: str,
-        logging_provider: loggingProvider, 
+        logging_provider: LoggingProvider, 
         db: Database,
         error_log: bool = True,
         id_fields: Optional[List[str]] = None,
@@ -729,6 +729,6 @@ class Table(TableABC):
     async def execute(self, sql: str, *args) -> Optional[List[Record]]:
         return await self.fetch(sql, *args)
 
-def setup_table_logging(logging_provider: loggingProvider):
+def setup_table_logging(logging_provider: LoggingProvider):
     global log
     log = logging_provider(__name__, "decorator")

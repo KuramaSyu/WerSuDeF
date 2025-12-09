@@ -1,2 +1,2 @@
-from .types import loggingProvider
+from .types import LoggingProvider
 from .undefined import UNDEFINED, UndefinedNoneOr, UndefinedOr

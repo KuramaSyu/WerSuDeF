@@ -8,7 +8,7 @@ import grpc
 from grpc.aio import ServicerContext
 import asyncpg
 
-from api import loggingProvider
+from api import LoggingProvider
 from api.undefined import UNDEFINED
 from db.repos import NoteRepoFacadeABC
 from db.entities import NoteEntity
@@ -32,7 +32,7 @@ class GrpcNoteService(NoteServiceServicer):
     Implements the gRPC service defined in grpc/proto/note.proto
     """
 
-    def __init__(self, repo: NoteRepoFacadeABC, log: loggingProvider):
+    def __init__(self, repo: NoteRepoFacadeABC, log: LoggingProvider):
         self.repo = repo
         self.log = log(__name__, self)
  
@@ -126,7 +126,7 @@ class GrpcUserService(UserServiceServicer):
     Implements the gRPC service defined in grpc/proto/user.proto
     """
 
-    def __init__(self, user_repo: UserRepoABC, log: loggingProvider):
+    def __init__(self, user_repo: UserRepoABC, log: LoggingProvider):
         self.repo = user_repo
         self.log = log(__name__, self)
 
