@@ -31,11 +31,13 @@ def to_grpc_note(note_entity: NoteEntity) -> Note:
     )
     basic_args["id"] = basic_args.pop("note_id")
 
+    assert all([e.model is not UNDEFINED and e.embedding is not UNDEFINED for e in note_entity.embeddings])
+    assert all([p.role_id is not UNDEFINED for p in note_entity.permissions])
     return Note(
         **basic_args,
         updated_at=updated_at_ts,
         embeddings=[
-            NoteEmbedding(model=e.model, embedding=e.embedding)
+            NoteEmbedding(model=e.model, embedding=e.embedding)  # type: ignore 
             for e in note_entity.embeddings
         ],
         permissions=[
