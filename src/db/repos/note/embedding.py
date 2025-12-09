@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from asyncpg import Record
+from ai.embedding_generator import EmbeddingGeneratorABC
 from db.entities import NoteEmbeddingEntity
 from db.table import TableABC
 
@@ -13,14 +14,20 @@ class NoteEmbeddingRepo(ABC):
     @abstractmethod
     async def insert(
         self,
-        embedding: NoteEmbeddingEntity,
+        note_id: int,
+        title: str,
+        content: str,
     ) -> NoteEmbeddingEntity:
-        """inserts an embedding
+        """generates the embedding and inserts it
         
         Args:
         -----
-        embedding: `NoteEmbeddingEntity`
-            the embedding of a note
+        note_id: `int`
+            the ID of the note
+        title: `str`
+            the note title, used to generate the embedding
+        content: `str`
+            the note content, used to generate the embedding
 
         Returns:
         --------
@@ -87,15 +94,40 @@ class NoteEmbeddingRepo(ABC):
         """
         ...
 
+    @property
+    @abstractmethod
+    def embedding_generator(self) -> EmbeddingGeneratorABC:
+        """Get the embedding generator used by this repository."""
+        ...
+
 class NoteEmbeddingPostgresRepo(NoteEmbeddingRepo):
     """Provides an impementation using Postgres as the backend database"""
-    def __init__(self, table: TableABC[List[Record]]):
+    def __init__(self, table: TableABC[List[Record]], embedding_generator: EmbeddingGeneratorABC):
         self._table = table
+        self._embedding_generator = embedding_generator
 
-    async def insert(self, embedding: NoteEmbeddingEntity) -> NoteEmbeddingEntity:
-        record = await self._table.insert(asdict(embedding))
+    async def insert(self, note_id: int, title: str, content: str) -> NoteEmbeddingEntity:
+        # generate embedding
+        embedding_content = f"{title}\n{content}"
+        embedding = self._embedding_generator.generate(embedding_content)
+        embedding_str = EmbeddingGeneratorABC.tensor_to_str_vec(embedding)
+
+        # insert embedding
+        record = await self._table.insert({
+            "note_id": note_id,
+            "model": self._embedding_generator.model_name,
+            "embedding": embedding_str,
+        })
         if not record:
             raise Exception("Failed to insert embedding")
+
+        # create embedding entity
+        assert len(record) > 0
+        embedding = NoteEmbeddingEntity(
+            note_id=record[0]["note_id"],
+            model=self._embedding_generator.model_name,
+            embedding=embedding.tolist(),
+        )
         return embedding
 
     async def update(self, set: NoteEmbeddingEntity, where: NoteEmbeddingEntity) -> NoteEmbeddingEntity:
@@ -125,4 +157,8 @@ class NoteEmbeddingPostgresRepo(NoteEmbeddingRepo):
         if not records:
             return []
         return [NoteEmbeddingEntity(**record) for record in records]
+
+    @property
+    def embedding_generator(self) -> EmbeddingGeneratorABC:
+        return self._embedding_generator
     
