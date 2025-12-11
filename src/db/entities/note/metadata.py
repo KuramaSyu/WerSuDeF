@@ -18,8 +18,8 @@ class NoteEntity:
     updated_at: UndefinedNoneOr[datetime]
     author_id: UndefinedNoneOr[int]
     content: UndefinedNoneOr[str]
-    embeddings: List[NoteEmbeddingEntity]
-    permissions: List[NotePermissionEntity]
+    embeddings: UndefinedOr[List[NoteEmbeddingEntity]]
+    permissions: UndefinedOr[List[NotePermissionEntity]]
 
     @staticmethod
     def from_record(record: Record | Dict[str, Any]) -> "NoteEntity":
