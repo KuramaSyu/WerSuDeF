@@ -13,6 +13,7 @@ from asyncpg import Record
 
 from api.types import LoggingProvider
 from db.database import Database
+from utils.convert import asdict
 
 TReturn = TypeVar('TReturn', List[Record], pd.DataFrame, covariant=True)
 log: Optional[logging.Logger] = None
@@ -546,6 +547,8 @@ class Table(TableABC):
             if len(where) != 1:
                 raise ValueError("DataFrame must contain exactly one row for update")
             where = dict(where.iloc[0])
+
+        where = asdict(where)  # removes UNDEFINED values
         num_gen = (num for num in range(1,100))
         update_set_query = ", ".join([f'{col_name}=${i}' for i, col_name in zip(num_gen, set.keys())])
         next_ = next(num_gen) -1  # otherwise it would be one to high - python bug?
