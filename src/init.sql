@@ -30,29 +30,35 @@ CREATE TABLE IF NOT EXISTS note.embedding (
     PRIMARY KEY(note_id, model)
 );
 
-CREATE TABLE IF NOT EXISTS note.permission (
-    note_id BIGINT REFERENCES note.content(id),
-    role_id BIGINT REFERENCES role.metadata(id),
-    PRIMARY KEY(note_id, role_id)
-);
-
-
 CREATE TABLE IF NOT EXISTS role.permission (
-    id SERIAL PRIMARY KEY,
-    role_id BIGINT REFERENCES role.metadata(id),
-    note_id BIGINT REFERENCES note.content(id) NULL, -- NULL for default permissions
-    permission SMALLINT -- like UNIX with rwx
+    id BIGINT PRIMARY KEY,
+    key TEXT UNIQUE -- e.g., 'read', 'write', 'delete', 'manage_roles'
 );
 
-CREATE TABLE IF NOT EXISTS role.member (
-    role_id BIGINT REFERENCES role.metadata(id),
-    member_id BIGINT REFERENCES users(id),
-    PRIMARY KEY(role_id, member_id)
+CREATE TABLE IF NOT EXISTS role.role_permission (
+    role_id BIGINT REFERENCES role.role(id),
+    permission_id BIGINT REFERENCES role.permission(id),
+    allow BOOLEAN, -- allow/deny flag
+    PRIMARY KEY(role_id, permission_id)
 );
 
-CREATE TABLE IF NOT EXISTS resources (
+CREATE TABLE IF NOT EXISTS role.role (
+  id BIGINT PRIMARY KEY,
+  name TEXT,
+  description TEXT
+);
+
+CREATE TABLE IF NOT EXISTS role.resource (
     id BIGSERIAL PRIMARY KEY,
     type TEXT NOT NULL CHECK (type IN ('shelf', 'book', 'chapter', 'note')),
-    parent_id BIGINT REFERENCES resources(id),
+    parent_id BIGINT REFERENCES role.resource(id),
     name TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS role.resource_role_assignment (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id),
+    role_id BIGINT REFERENCES role.role(id),
+    resource_id BIGINT NOT NULL,
+    UNIQUE(user_id, role_id, resource_id)
+)
