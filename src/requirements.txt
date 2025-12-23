@@ -5,12 +5,9 @@ httpx
 python-dotenv
 
 asyncpg
-psycopg[binary,pool]
 
 torch
 transformers
 sentence-transformers
-scikit-learn
-scipy
 
 colorama
