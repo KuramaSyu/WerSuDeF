@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import List
+from dataclasses import replace
+from typing import List, Optional
 
 from asyncpg import Record
+from src.api.undefined import UNDEFINED
 from src.db.entities import NoteEntity
+from src.db.repos.note import permission
 from src.db.table import TableABC
 
 from src.utils import asdict
@@ -55,7 +58,7 @@ class NoteContentRepo(ABC):
     async def delete(
         self,
         metadata: NoteEntity,
-    ) -> NoteEntity:
+    ) -> Optional[List[NoteEntity]]:
         """delete metadata
         
         Args:
@@ -135,16 +138,34 @@ class NoteContentPostgresRepo(NoteContentRepo):
         record['note_id'] = record.pop('id')  # convert SQL id -> note_id for NoteEntity
         return NoteEntity(**record)
 
-    async def delete(self, metadata: NoteEntity) -> NoteEntity:
-        conditions = asdict(metadata)
+    async def delete(self, metadata: NoteEntity) -> Optional[List[NoteEntity]]:
+        SQL_ID = self._table.get_id_fields()[0]
+        ENTITY_ID = "note_id"
+        # remove permissions and embeddings, since these are not in the content table
+        conditions = asdict(
+            replace(metadata, permissions=UNDEFINED, embeddings=UNDEFINED)
+        )
+
+        # map entities note_id to table id
+        conditions[SQL_ID] = conditions.pop(ENTITY_ID, None)
+
         if not conditions:
             raise ValueError(f"At least one field must be set to delete metadata: {metadata}")
-        record = await self._table.delete(
+        records = await self._table.delete(
             where=conditions
         )
-        if not record:
+        if not records:
             raise Exception("Failed to delete metadata")
-        return metadata
+        
+        # convert records to note entities with id conversion
+        entities = []
+        for r in records:
+            d = dict(r)
+            d[ENTITY_ID] = d.pop(SQL_ID)
+            entity = NoteEntity(**d, embeddings=[], permissions=[])
+            entities.append(entity)
+
+        return entities
     
     async def select(self, metadata: NoteEntity) -> List[NoteEntity]:
         records = await self._table.select(
@@ -157,7 +178,7 @@ class NoteContentPostgresRepo(NoteContentRepo):
     async def select_by_id(self, note_id: int) -> NoteEntity:
         record = await self._table.fetch_by_id(note_id)
         if not record:
-            raise Exception(f"Note with ID {note_id} not found")
+            raise RuntimeError(f"Note with ID {note_id} not found")
         # convert Record to NoteEntity (id -> note_id)
         record = dict(record)
         record['note_id'] = record.pop('id')
