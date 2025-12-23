@@ -6,5 +6,9 @@ from tests.dict_helper import (
     DropExceptKeysUseCase, 
     AsDictDataclassUseCase
 )
+
+from tests.user_repo import postgres_container
 if __name__ == "__main__":
     unittest.main()
+
+from unittest import TestCase
