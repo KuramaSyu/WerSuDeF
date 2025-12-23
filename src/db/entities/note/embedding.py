@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Sequence
 
+from src.ai.embedding_generator import EmbeddingGenerator, EmbeddingGeneratorABC
 from src.api.undefined import *
 
 
@@ -11,6 +12,11 @@ class NoteEmbeddingEntity:
     note_id: int
     model: UndefinedOr[str]
     embedding: UndefinedOr[Sequence[float]]
+
+    def __post_init__(self):
+        if isinstance(self.embedding, str):
+            # embeddings are strings in DB, hence a conversion here
+            self.embedding = EmbeddingGeneratorABC.str_vec_to_list(self.embedding)
 
 
 
