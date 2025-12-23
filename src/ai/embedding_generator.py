@@ -45,6 +45,32 @@ class EmbeddingGeneratorABC(ABC):
         """
         return f"[{','.join(str(x) for x in tensor.tolist())}]"
 
+    @staticmethod
+    def str_vec_to_list(vec_str: str) -> Sequence[float]:
+        """
+        Convert a string representation of a vector back to a list of floats.
+
+        Args
+        ----
+        vec_str : str
+            A string representing a vector, formatted as a bracketed,
+            comma-separated list (e.g., `"[1.0,2.0,3.0]"`).
+
+        Returns
+        -------
+        Sequence[np.float32]
+            A list of floats extracted from the string representation.
+
+        Examples
+        ---------
+        - Input: `"[1.0,2.0,3.0]"` -> Output: `[1.0, 2.0, 3.0]`
+        - Input: `"[[1,2],[3,4]]"` -> Output: `[[1.0, 2.0], [3.0, 4.0]]`
+        """
+        vec_str = vec_str.strip().lstrip("[").rstrip("]")
+        if not vec_str:
+            return []
+        return [float(x) for x in vec_str.split(",")]
+
     @property
     @abstractmethod
     def model_name(self) -> str:
