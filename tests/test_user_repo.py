@@ -1,7 +1,6 @@
 from dataclasses import replace
 from typing import AsyncGenerator, Optional
 import pytest
-from sqlalchemy import update
 from testcontainers.postgres import PostgresContainer
 from src.db.entities.user.user import UserEntity
 from src.db.repos.user.user import UserRepoABC
