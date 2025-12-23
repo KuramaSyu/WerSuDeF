@@ -10,9 +10,12 @@ from src.utils.dict_helper import drop_except_keys, drop_undefined
 
 
 
-def to_grpc_note(note_entity: NoteEntity) -> Note:
+def to_grpc_note(note_entity: NoteEntity | None) -> Note:
     """Converts a NoteEntity to a gRPC Note message."""
 
+    if note_entity is None:
+        return Note()
+    
     assert note_entity.note_id is not None
     assert note_entity.title is not None
     assert note_entity.content is not None
@@ -30,19 +33,18 @@ def to_grpc_note(note_entity: NoteEntity) -> Note:
     )
     basic_args["id"] = basic_args.pop("note_id")
 
-    assert all([e.model is not UNDEFINED and e.embedding is not UNDEFINED for e in note_entity.embeddings])
-    assert all([p.role_id is not UNDEFINED for p in note_entity.permissions])
+    # convert permissions
+    assert isinstance(note_entity.permissions, list)
+    perms: list[NotePermission] = []
+    for p in note_entity.permissions:
+        assert isinstance(p.role_id, int)
+        perms.append(NotePermission(role_id=p.role_id))
+
     return Note(
         **basic_args,
         updated_at=updated_at_ts,
         # embeddings disabled and reserved in proto file
-        # embeddings=[
-        #     NoteEmbedding(model=e.model, embedding=e.embedding)  # type: ignore 
-        #     for e in note_entity.embeddings
-        # ],
-        permissions=[
-            NotePermission(role_id=p.role_id) for p in note_entity.permissions
-        ],
+        permissions=perms,
     )
 
 def to_grpc_minimal_note(note_entity: NoteEntity) -> MinimalNote:
