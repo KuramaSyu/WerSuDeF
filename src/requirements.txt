@@ -12,3 +12,5 @@ transformers
 sentence-transformers
 scikit-learn
 scipy
+
+colorama
