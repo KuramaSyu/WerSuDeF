@@ -25,7 +25,7 @@ from src.grpc_mod import (
 from src.grpc_mod.converter import to_grpc_note, to_grpc_user
 from src.db import UserRepoABC, UserEntity
 from src.grpc_mod.converter.note_entity_converter import to_grpc_minimal_note, to_search_type
-from src.grpc_mod.proto.note_pb2 import GetSearchNotesRequest, MinimalNote
+from src.grpc_mod.proto.note_pb2 import AlterNoteRequest, GetSearchNotesRequest, MinimalNote
 
 
 class GrpcNoteService(NoteServiceServicer):
@@ -39,47 +39,8 @@ class GrpcNoteService(NoteServiceServicer):
  
     async def GetNote(self, request: GetNoteRequest, context: ServicerContext) -> Note:
         try:
-            note_entity = await self.repo.select(
-                NoteEntity(
-                    note_id=request.id,
-                    author_id=UNDEFINED,
-                    content=UNDEFINED,
-                    embeddings=[],
-                    permissions=[],
-                    title=UNDEFINED,
-                    updated_at=UNDEFINED
-                )
-            )
-            assert (note_entity 
-                and note_entity.note_id 
-                and note_entity.author_id 
-                and note_entity.content 
-                and note_entity.title
-            )
-
-            # conversion from note_entity to gRPC Note Message
-            assert all([e.model != UNDEFINED for e in note_entity.embeddings])
-            return Note(
-                id=note_entity.note_id,
-                title=note_entity.title,
-                author_id=note_entity.author_id,
-                content=note_entity.content,
-                # embeddings field disabled and reserved in proto file
-                # embeddings=[
-                #     NoteEmbedding(
-                #         model=e.model,  # type: ignore
-                #         embedding=e.embedding,  # type: ignore
-                #     ) for e in note_entity.embeddings
-                #     if e.model != UNDEFINED and e.embedding != UNDEFINED
-                # ],
-                permissions=[
-                    NotePermission(
-                        role_id=p.role_id  # type: ignore
-                    ) for p in note_entity.permissions
-                    if p.role_id != UNDEFINED
-                ]
-
-            )
+            note_entity = await self.repo.select_by_id(request.id)
+            return to_grpc_note(note_entity)
         except Exception:
             self.log.error(f"Error fetching note: {traceback.format_exc()}")
             context.set_code(grpc.StatusCode.INTERNAL)
@@ -110,19 +71,26 @@ class GrpcNoteService(NoteServiceServicer):
             context.set_details("Internal server error while creating note")
             return Note()
 
-    async def AlterNote(self, request: PostNoteRequest, context: ServicerContext) -> Note:
-        self.repo.update(
-            NoteEntity(
-                note_id=request.id,
-                author_id=request.author_id,
-                content=request.content,
-                embeddings=[],
-                permissions=[],
-                title=request.title,
-                updated_at=datetime.now(),
+    async def AlterNote(self, request: AlterNoteRequest, context: ServicerContext) -> Note:
+        try:
+            note_entity = await self.repo.update(
+                NoteEntity(
+                    note_id=request.id,
+                    author_id=request.author_id,
+                    content=request.content,
+                    embeddings=UNDEFINED,
+                    permissions=UNDEFINED,
+                    title=request.title,
+                    updated_at=datetime.now(),
+                )
             )
-        )
-        ...
+            return to_grpc_note(note_entity)
+        except Exception:
+            self.log.error(f"Error updating note: {traceback.format_exc()}")
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details("Internal server error while updating note")
+            return Note()
+        
     async def SearchNotes(
         self, request: GetSearchNotesRequest, context: ServicerContext
     ) -> AsyncIterator[MinimalNote]:
