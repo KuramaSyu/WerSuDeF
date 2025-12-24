@@ -324,13 +324,3 @@ async def test_search_no_filter(
     assert search_results[1].content == "Second note content."
     assert search_results[0].content == "Third note content."
 
-
-
-
-
-
-
-    
-
-
-
