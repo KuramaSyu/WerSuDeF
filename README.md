@@ -23,6 +23,5 @@
 
 ### Start gRPC server
 ```bash
-cd src
-env PYTHONTRACEMALLOC=1 python main.py
+docker compose down; rm -r data; docker compose up --build -d; env PYTHONTRACEMALLOC=1 python -m src.main
 ```
