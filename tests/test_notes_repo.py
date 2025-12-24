@@ -284,6 +284,46 @@ async def test_search_by_similarity(
         should_contain="The Legend of Zelda"
     ) == True
 
+async def test_search_no_filter(
+    note_repo_facade: NoteRepoFacadeABC, 
+    user_repo: UserRepoABC
+):
+    """Creates a test user, 
+    and creates multiple notes for this user, 
+    then searches without filter
+    which should return notes in creation order
+    """
+    user = UserEntity(
+        discord_id=123455,
+        avatar_url="test",
+    )
+    user = await user_repo.insert(user)
+
+    note_titles = [
+        "First note content.",
+        "Second note content.",
+        "Third note content.",
+    ]
+
+    for content in note_titles:
+        test_note = NoteEntity(
+            title=content, 
+            content=content, 
+            updated_at=datetime.now(), 
+            author_id=user.id
+        )
+        await note_repo_facade.insert(test_note)
+
+    search_results = await note_repo_facade.search_notes(
+        search_type=SearchType.NO_SEARCH,
+        query="",
+        pagination=Pagination(limit=10, offset=0)
+    )
+    assert len(search_results) >= 3
+    assert search_results[2].content == "First note content."
+    assert search_results[1].content == "Second note content."
+    assert search_results[0].content == "Third note content."
+
 
 
 
