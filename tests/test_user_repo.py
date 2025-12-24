@@ -12,27 +12,19 @@ from src.db.repos import UserPostgresRepo, Database
 from src.utils import logging_provider
 
 # import fixtures, otherise pytest will not detect them
-from .fixtures import db, note_repo_facade, user_repo, note_repo_facade, dsn
+from .fixtures import db, note_repo_facade, user_repo, note_repo_facade, dsn, test_user
 
 
 
-async def test_create_user(db: Database, user_repo: UserRepoABC):
+async def test_create_user(user_repo: UserRepoABC, test_user: UserEntity):
     """Creates a test user and retrieves it by discord_id"""
-    test_user = UserEntity(
-        discord_id=123455,
-        avatar="test",
-    )
     await user_repo.insert(test_user)
     ret_user = await user_repo.select_by_discord_id(test_user.discord_id)
     assert ret_user
     assert ret_user.avatar == test_user.avatar
 
-async def test_update_user(db: Database, user_repo: UserRepoABC):
+async def test_update_user(db: Database, user_repo: UserRepoABC, test_user: UserEntity):
     """Creates a test user, updates it, and retrieves it once by discord_id and once by id"""
-    test_user = UserEntity(
-        discord_id=123455,
-        avatar="test",
-    )
     await user_repo.insert(test_user)
     updated_user = replace(test_user, avatar="http://somewere")
     ret_user_update = await user_repo.update(updated_user)
@@ -43,17 +35,13 @@ async def test_update_user(db: Database, user_repo: UserRepoABC):
     ret_user_by_id = await user_repo.select(ret_user_discord.id)
     assert ret_user_by_id == ret_user_discord  # both selects should return same user
 
-async def test_create_user_with_note_and_delete(db: Database, user_repo: UserRepoABC, note_repo_facade: NoteRepoFacadeABC):
+async def test_create_user_with_note_and_delete(user_repo: UserRepoABC, note_repo_facade: NoteRepoFacadeABC, test_user: UserEntity):
     """
     - Creates a user
     - Creates a note for that user
     - Deletes the user
     - Asserts that both user and note are deleted (cascade delete)
     """
-    test_user = UserEntity(
-        discord_id=123455,
-        avatar="test",
-    )
     test_user = await user_repo.insert(test_user)
     assert isinstance(test_user.id, int)
 

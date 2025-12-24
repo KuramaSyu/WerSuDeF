@@ -14,21 +14,14 @@ from src.db.repos.user.user import UserRepoABC
 import src.api
 from src.db.repos import UserPostgresRepo, Database, note
 from src.utils import logging_provider
-from .fixtures import db, note_repo_facade, user_repo, dsn
+from .fixtures import db, note_repo_facade, user_repo, dsn, test_user
 
 # each test recreates user and note to keep readability per test
 
-async def test_create_note(db: Database, note_repo_facade: NoteRepoFacadeABC, user_repo: UserRepoABC):
+async def test_create_note(db: Database, note_repo_facade: NoteRepoFacadeABC, user_repo: UserRepoABC, test_user: UserEntity):
     """Creates a test user, and creates a note for this user"""
     log = logging_provider(__name__)
-    user = UserEntity(
-        discord_id=123455,
-        avatar="test",
-        username="Paul",
-        discriminator="1234",
-        email="paul@example.com"
-    )
-    user = await user_repo.insert(user)
+    user = await user_repo.insert(test_user)
 
     updated_at = datetime(2024, 1, 1, 12, 0, 0)
     test_note = NoteEntity(
@@ -43,13 +36,9 @@ async def test_create_note(db: Database, note_repo_facade: NoteRepoFacadeABC, us
     log.debug(f"Created note: {ret_note}; expected: {test_note}")
     assert ret_note == test_note
 
-async def test_update_note(db: Database, note_repo_facade: NoteRepoFacadeABC, user_repo: UserRepoABC):
+async def test_update_note(db: Database, note_repo_facade: NoteRepoFacadeABC, user_repo: UserRepoABC, test_user: UserEntity):
     """Creates a test user, and creates a note for this user"""
-    user = UserEntity(
-        discord_id=123455,
-        avatar="test",
-    )
-    user = await user_repo.insert(user)
+    user = await user_repo.insert(test_user)
 
     updated_at = datetime(2024, 1, 1, 12, 0, 0)
     test_note = NoteEntity(
@@ -72,14 +61,11 @@ async def test_update_note(db: Database, note_repo_facade: NoteRepoFacadeABC, us
 async def test_create_and_remove_note(
     db: Database, 
     note_repo_facade: NoteRepoFacadeABC, 
-    user_repo: UserRepoABC
+    user_repo: UserRepoABC,
+    test_user: UserEntity
 ):
     """Creates a test user, and creates a note for this user, then removes the note"""
-    user = UserEntity(
-        discord_id=123455,
-        avatar="test",
-    )
-    user = await user_repo.insert(user)
+    user = await user_repo.insert(test_user)
 
     updated_at = datetime(2024, 1, 1, 12, 0, 0)
     test_note = NoteEntity(
@@ -109,17 +95,11 @@ async def test_create_and_remove_note(
 
 async def test_search_by_context(
     note_repo_facade: NoteRepoFacadeABC, 
-    user_repo: UserRepoABC
+    user_repo: UserRepoABC,
+    test_user: UserEntity
 ):
     """Creates a test user, and creates multiple notes for this user, then searches by context"""
-    user = UserEntity(
-        discord_id=123455,
-        avatar="test",
-        username="Paul",
-        discriminator="1234",
-        email="paul@example.com"
-    )
-    user = await user_repo.insert(user)
+    user = await user_repo.insert(test_user)
 
     notes_contents = [
         "Python is a nice language which makes programming and life easier.",
@@ -172,17 +152,11 @@ async def test_search_by_context(
 
 async def test_search_by_web_lexme_matching(
     note_repo_facade: NoteRepoFacadeABC, 
-    user_repo: UserRepoABC
+    user_repo: UserRepoABC,
+    test_user: UserEntity
 ):
     """Creates a test user, and creates multiple notes for this user, then searches by fuzzy matching"""
-    user = UserEntity(
-        discord_id=123455,
-        avatar="test",
-        username="Paul",
-        discriminator="1234",
-        email="paul@example.com"
-    )
-    user = await user_repo.insert(user)
+    user = await user_repo.insert(test_user)
 
     note_titles = [
         "Zelda totk means Tears of the Kingdom.",
@@ -245,18 +219,15 @@ async def test_search_by_web_lexme_matching(
 
 async def test_search_by_similarity(
     note_repo_facade: NoteRepoFacadeABC, 
-    user_repo: UserRepoABC
+    user_repo: UserRepoABC,
+    test_user: UserEntity
 ):
     """
     Creates a test user, 
     and creates multiple notes for this user, 
     then searches by similarity
     """
-    user = UserEntity(
-        discord_id=123455,
-        avatar="test",
-    )
-    user = await user_repo.insert(user)
+    user = await user_repo.insert(test_user)
 
     note_titles = [
         "Tears of the Kingdom is a game for Nintendo Switch.",
@@ -295,21 +266,15 @@ async def test_search_by_similarity(
 
 async def test_search_no_filter(
     note_repo_facade: NoteRepoFacadeABC, 
-    user_repo: UserRepoABC
+    user_repo: UserRepoABC,
+    test_user: UserEntity
 ):
     """Creates a test user, 
     and creates multiple notes for this user, 
     then searches without filter
     which should return notes in creation order
     """
-    user = UserEntity(
-        discord_id=123455,
-        avatar="test",
-        username="Paul",
-        discriminator="1234",
-        email="paul@example.com"
-    )
-    user = await user_repo.insert(user)
+    user = await user_repo.insert(test_user)
 
     note_titles = [
         "First note content.",

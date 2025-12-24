@@ -37,6 +37,15 @@ def dsn() -> Iterator[str]:
     yield dsn
     container.stop()
 
+@pytest.fixture(scope="function")
+def test_user() -> UserEntity:
+    return UserEntity(
+        discord_id=987654321,
+        avatar="sldfjseoisjldkj",
+        username="KuramaSyu",
+        discriminator="1234",
+        email="kuramaSyu@example.com"
+    )
 
 @pytest.fixture(scope="function")
 async def db(dsn):
