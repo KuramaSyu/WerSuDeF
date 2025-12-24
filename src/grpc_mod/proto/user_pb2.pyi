@@ -24,18 +24,27 @@ class User(google.protobuf.message.Message):
 
     ID_FIELD_NUMBER: builtins.int
     DISCORD_ID_FIELD_NUMBER: builtins.int
-    AVATAR_URL_FIELD_NUMBER: builtins.int
+    AVATAR_FIELD_NUMBER: builtins.int
+    USERNAME_FIELD_NUMBER: builtins.int
+    DISCRIMINATOR_FIELD_NUMBER: builtins.int
+    EMAIL_FIELD_NUMBER: builtins.int
     id: builtins.int
     discord_id: builtins.int
-    avatar_url: builtins.str
+    avatar: builtins.str
+    username: builtins.str
+    discriminator: builtins.str
+    email: builtins.str
     def __init__(
         self,
         *,
         id: builtins.int = ...,
         discord_id: builtins.int = ...,
-        avatar_url: builtins.str = ...,
+        avatar: builtins.str = ...,
+        username: builtins.str = ...,
+        discriminator: builtins.str = ...,
+        email: builtins.str = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing.Literal["avatar_url", b"avatar_url", "discord_id", b"discord_id", "id", b"id"]) -> None: ...
+    def ClearField(self, field_name: typing.Literal["avatar", b"avatar", "discord_id", b"discord_id", "discriminator", b"discriminator", "email", b"email", "id", b"id", "username", b"username"]) -> None: ...
 
 Global___User: typing_extensions.TypeAlias = User
 
@@ -67,16 +76,25 @@ class PostUserRequest(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     DISCORD_ID_FIELD_NUMBER: builtins.int
-    AVATAR_URL_FIELD_NUMBER: builtins.int
+    AVATAR_FIELD_NUMBER: builtins.int
+    USERNAME_FIELD_NUMBER: builtins.int
+    DISCRIMINATOR_FIELD_NUMBER: builtins.int
+    EMAIL_FIELD_NUMBER: builtins.int
     discord_id: builtins.int
-    avatar_url: builtins.str
+    avatar: builtins.str
+    username: builtins.str
+    discriminator: builtins.str
+    email: builtins.str
     def __init__(
         self,
         *,
         discord_id: builtins.int = ...,
-        avatar_url: builtins.str = ...,
+        avatar: builtins.str = ...,
+        username: builtins.str = ...,
+        discriminator: builtins.str = ...,
+        email: builtins.str = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing.Literal["avatar_url", b"avatar_url", "discord_id", b"discord_id"]) -> None: ...
+    def ClearField(self, field_name: typing.Literal["avatar", b"avatar", "discord_id", b"discord_id", "discriminator", b"discriminator", "email", b"email", "username", b"username"]) -> None: ...
 
 Global___PostUserRequest: typing_extensions.TypeAlias = PostUserRequest
 
@@ -86,23 +104,38 @@ class AlterUserRequest(google.protobuf.message.Message):
 
     ID_FIELD_NUMBER: builtins.int
     DISCORD_ID_FIELD_NUMBER: builtins.int
-    AVATAR_URL_FIELD_NUMBER: builtins.int
+    AVATAR_FIELD_NUMBER: builtins.int
+    USERNAME_FIELD_NUMBER: builtins.int
+    DISCRIMINATOR_FIELD_NUMBER: builtins.int
+    EMAIL_FIELD_NUMBER: builtins.int
     id: builtins.int
     discord_id: builtins.int
-    avatar_url: builtins.str
+    avatar: builtins.str
+    username: builtins.str
+    discriminator: builtins.str
+    email: builtins.str
     def __init__(
         self,
         *,
         id: builtins.int = ...,
         discord_id: builtins.int | None = ...,
-        avatar_url: builtins.str | None = ...,
+        avatar: builtins.str | None = ...,
+        username: builtins.str | None = ...,
+        discriminator: builtins.str | None = ...,
+        email: builtins.str | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing.Literal["_avatar_url", b"_avatar_url", "_discord_id", b"_discord_id", "avatar_url", b"avatar_url", "discord_id", b"discord_id"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing.Literal["_avatar_url", b"_avatar_url", "_discord_id", b"_discord_id", "avatar_url", b"avatar_url", "discord_id", b"discord_id", "id", b"id"]) -> None: ...
+    def HasField(self, field_name: typing.Literal["_avatar", b"_avatar", "_discord_id", b"_discord_id", "_discriminator", b"_discriminator", "_email", b"_email", "_username", b"_username", "avatar", b"avatar", "discord_id", b"discord_id", "discriminator", b"discriminator", "email", b"email", "username", b"username"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing.Literal["_avatar", b"_avatar", "_discord_id", b"_discord_id", "_discriminator", b"_discriminator", "_email", b"_email", "_username", b"_username", "avatar", b"avatar", "discord_id", b"discord_id", "discriminator", b"discriminator", "email", b"email", "id", b"id", "username", b"username"]) -> None: ...
     @typing.overload
-    def WhichOneof(self, oneof_group: typing.Literal["_avatar_url", b"_avatar_url"]) -> typing.Literal["avatar_url"] | None: ...
+    def WhichOneof(self, oneof_group: typing.Literal["_avatar", b"_avatar"]) -> typing.Literal["avatar"] | None: ...
     @typing.overload
     def WhichOneof(self, oneof_group: typing.Literal["_discord_id", b"_discord_id"]) -> typing.Literal["discord_id"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing.Literal["_discriminator", b"_discriminator"]) -> typing.Literal["discriminator"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing.Literal["_email", b"_email"]) -> typing.Literal["email"] | None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing.Literal["_username", b"_username"]) -> typing.Literal["username"] | None: ...
 
 Global___AlterUserRequest: typing_extensions.TypeAlias = AlterUserRequest
 

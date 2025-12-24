@@ -1,12 +1,17 @@
 syntax = "proto3";
 
-package user;
+package proto;
+option go_package = "github.com/KuramaSyu/WerSu-Rest/src/proto;proto";
 
 // User Messages
 message User {
     int32 id = 1;
     int64 discord_id = 2;
-    string avatar_url = 3;
+    string avatar= 3;
+    string username = 4;
+    string discriminator = 5;
+    string email = 6;
+
 }
 
 message GetUserRequest {
@@ -16,13 +21,19 @@ message GetUserRequest {
 
 message PostUserRequest {
     int64 discord_id = 1;
-    string avatar_url = 2;
+    string avatar = 2;
+    string username = 3;
+    string discriminator = 4;
+    string email = 5;
 }
 
 message AlterUserRequest {
     int32 id = 1;
     optional int64 discord_id = 2;
-    optional string avatar_url = 3;
+    optional string avatar = 3;
+    optional string username = 4;
+    optional string discriminator = 5;
+    optional string email = 6;
 }
 
 message DeleteUserRequest {
