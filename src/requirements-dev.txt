@@ -12,3 +12,7 @@ testcontainers
 # Typing / protobuf helpers
 mypy-protobuf
 types-protobuf
+
+# protobuf generation
+grpcio
+grpcio-tools

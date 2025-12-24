@@ -1,7 +1,8 @@
+
 numpy
 pandas
 requests
-httpx
+grpclib
 python-dotenv
 
 asyncpg
