@@ -28,6 +28,10 @@ class SearchType(Enum):
     CONTEXT = 4
 
 
+class UserContext:
+    def __init__(self, user_id: int):
+        self.user_id = user_id
+
 
 class NoteRepoFacadeABC(ABC):
     """Represents the ABC for note-operations which operate over multiple relations"""
@@ -69,6 +73,7 @@ class NoteRepoFacadeABC(ABC):
     async def update(
         self,
         note: NoteEntity,
+        ctx: UserContext,
     ) -> NoteEntity:
         """updates note (content only)
         
@@ -88,6 +93,7 @@ class NoteRepoFacadeABC(ABC):
     async def delete(
         self,
         note: NoteEntity,
+        ctx: UserContext,
     ) -> Optional[List[NoteEntity]]:
         """delete note
         
@@ -108,6 +114,7 @@ class NoteRepoFacadeABC(ABC):
     async def select_by_id(
         self,
         note_id: int,
+        ctx: UserContext,
     ) -> Optional[NoteEntity]:
         """select a whole note by its ID
         
@@ -130,6 +137,7 @@ class NoteRepoFacadeABC(ABC):
         self, 
         search_type: SearchType,
         query: str, 
+        ctx: UserContext,
         pagination: Pagination
     ) -> List[NoteEntity]:
         """search notes according to the search type
@@ -210,7 +218,7 @@ class NoteRepoFacade(NoteRepoFacadeABC):
         note.note_id = note_id
         return note
     
-    async def update(self, note: NoteEntity) -> NoteEntity:
+    async def update(self, note: NoteEntity, ctx: UserContext) -> NoteEntity:
         # update content
         note_entity = await self._content_repo.update(
             set=replace(note, embeddings=UNDEFINED, permissions=UNDEFINED, note_id=UNDEFINED),
@@ -222,10 +230,10 @@ class NoteRepoFacade(NoteRepoFacadeABC):
         note_entity.permissions = note.permissions
         return note_entity
 
-    async def delete(self, note) -> Optional[List[NoteEntity]]:
+    async def delete(self, note: NoteEntity, ctx: UserContext) -> Optional[List[NoteEntity]]:
         return await self._content_repo.delete(replace(note, embeddings=UNDEFINED, permissions=UNDEFINED))
     
-    async def select_by_id(self, note_id: int) -> Optional[NoteEntity]:
+    async def select_by_id(self, note_id: int, ctx: UserContext) -> Optional[NoteEntity]:
         record = await self._content_repo.select_by_id(note_id)
         if not record:
             return None
@@ -254,6 +262,7 @@ class NoteRepoFacade(NoteRepoFacadeABC):
         self, 
         search_type: SearchType,
         query: str, 
+        ctx: UserContext,
         pagination: Pagination
     ) -> List[NoteEntity]:
 
@@ -263,6 +272,7 @@ class NoteRepoFacade(NoteRepoFacadeABC):
             "query": query,
             "limit": pagination.limit,
             "offset": pagination.offset,
+            "user_id": ctx.user_id,
         }
         strategy: NoteSearchStrategy
         if search_type == SearchType.NO_SEARCH:
