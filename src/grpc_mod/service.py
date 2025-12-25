@@ -13,7 +13,7 @@ from src.api.types import Pagination
 from src.api.undefined import UNDEFINED
 from src.db.repos import NoteRepoFacadeABC
 from src.db.entities import NoteEntity
-from src.db.repos.note.note import SearchType
+from src.db.repos.note.note import SearchType, UserContext
 from src.grpc_mod import (
     GetNoteRequest, NoteEmbedding, 
     NotePermission, PostNoteRequest, Note,
@@ -39,7 +39,7 @@ class GrpcNoteService(NoteServiceServicer):
  
     async def GetNote(self, request: GetNoteRequest, context: ServicerContext) -> Note:
         try:
-            note_entity = await self.repo.select_by_id(request.id)
+            note_entity = await self.repo.select_by_id(request.id, UserContext(user_id=request.user_id))
             return to_grpc_note(note_entity)
         except Exception:
             self.log.error(f"Error fetching note: {traceback.format_exc()}")
@@ -82,7 +82,8 @@ class GrpcNoteService(NoteServiceServicer):
                     permissions=UNDEFINED,
                     title=request.title,
                     updated_at=datetime.now(),
-                )
+                ),
+                UserContext(user_id=request.author_id)
             )
             return to_grpc_note(note_entity)
         except Exception:
@@ -97,7 +98,8 @@ class GrpcNoteService(NoteServiceServicer):
         notes = await self.repo.search_notes(
             to_search_type(request.search_type),
             request.query,
-            pagination=Pagination(limit=request.limit, offset=request.offset)
+            pagination=Pagination(limit=request.limit, offset=request.offset),
+            ctx=UserContext(user_id=request.user_id),
         )
         for note in notes:
             yield to_grpc_minimal_note(note)
