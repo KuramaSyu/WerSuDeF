@@ -5,7 +5,7 @@ import pytest
 from testcontainers.postgres import PostgresContainer
 from src.db.entities.note.metadata import NoteEntity
 from src.db.entities.user.user import UserEntity
-from src.db.repos.note.note import NoteRepoFacadeABC
+from src.db.repos.note.note import NoteRepoFacadeABC, UserContext
 from src.db.repos.user.user import UserRepoABC
 import src.api
 from src.db.repos import UserPostgresRepo, Database
@@ -44,6 +44,7 @@ async def test_create_user_with_note_and_delete(user_repo: UserRepoABC, note_rep
     """
     test_user = await user_repo.insert(test_user)
     assert isinstance(test_user.id, int)
+    ctx = UserContext(user_id=test_user.id)
 
     test_note = NoteEntity(
         title="Pauls secret note", 
@@ -59,4 +60,4 @@ async def test_create_user_with_note_and_delete(user_repo: UserRepoABC, note_rep
     assert ret_user is None 
 
     with pytest.raises(RuntimeError, match="not found"):
-        ret_note = await note_repo_facade.select_by_id(note.note_id)
+        ret_note = await note_repo_facade.select_by_id(note.note_id, ctx=ctx)

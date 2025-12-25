@@ -7,7 +7,7 @@ from src.api.types import Pagination
 from src.api.undefined import UNDEFINED
 from src.db.entities.note.metadata import NoteEntity
 from src.db.repos.note.content import NoteContentPostgresRepo, NoteContentRepo
-from src.db.repos.note.note import NoteRepoFacade, NoteRepoFacadeABC, SearchType
+from src.db.repos.note.note import NoteRepoFacade, NoteRepoFacadeABC, SearchType, UserContext
 from src.db.table import Table
 from src.db.entities.user.user import UserEntity
 from src.db.repos.user.user import UserRepoABC
@@ -39,6 +39,8 @@ async def test_create_note(db: Database, note_repo_facade: NoteRepoFacadeABC, us
 async def test_update_note(db: Database, note_repo_facade: NoteRepoFacadeABC, user_repo: UserRepoABC, test_user: UserEntity):
     """Creates a test user, and creates a note for this user"""
     user = await user_repo.insert(test_user)
+    assert user.id
+    ctx = UserContext(user_id=user.id)
 
     updated_at = datetime(2024, 1, 1, 12, 0, 0)
     test_note = NoteEntity(
@@ -54,7 +56,7 @@ async def test_update_note(db: Database, note_repo_facade: NoteRepoFacadeABC, us
         content="This is an updated test note.", 
         updated_at=datetime(2024, 1, 2, 12, 0, 0)
     )
-    ret_note = await note_repo_facade.update(updated_note)
+    ret_note = await note_repo_facade.update(updated_note, ctx)
     print(f"Updated note: {ret_note}; expected: {updated_note}")
     assert ret_note == updated_note
 
@@ -66,6 +68,8 @@ async def test_create_and_remove_note(
 ):
     """Creates a test user, and creates a note for this user, then removes the note"""
     user = await user_repo.insert(test_user)
+    assert user.id
+    ctx = UserContext(user_id=user.id)
 
     updated_at = datetime(2024, 1, 1, 12, 0, 0)
     test_note = NoteEntity(
@@ -77,11 +81,11 @@ async def test_create_and_remove_note(
     test_note_insert = await note_repo_facade.insert(test_note)
     assert isinstance(test_note_insert.note_id, int)  # inserted note should have an ID
 
-    test_note_select = await note_repo_facade.select_by_id(note_id=test_note_insert.note_id)
+    test_note_select = await note_repo_facade.select_by_id(note_id=test_note_insert.note_id, ctx=ctx)
     assert test_note_select  # select should return a note
     assert test_note_select == test_note_insert  # selected note should equal inserted note
 
-    test_notes_delete = await note_repo_facade.delete(test_note_insert)
+    test_notes_delete = await note_repo_facade.delete(test_note_insert, ctx)
     
     # deleted note should equal inserted note. Embeddings and permissions are left out, 
     # since they get cleard by SQL constraints and are not returned in the delete statement
@@ -90,7 +94,8 @@ async def test_create_and_remove_note(
     with pytest.raises(RuntimeError, match=f"Note with ID {test_note_insert.note_id} not found"):
         # select should raise RuntimeError, that note with ID is not found
         test_note_select_after_delete = await note_repo_facade.select_by_id(
-            note_id=test_note_insert.note_id
+            note_id=test_note_insert.note_id,
+            ctx=ctx
         )
 
 async def test_search_by_context(
@@ -100,7 +105,8 @@ async def test_search_by_context(
 ):
     """Creates a test user, and creates multiple notes for this user, then searches by context"""
     user = await user_repo.insert(test_user)
-
+    assert user.id
+    ctx = UserContext(user_id=user.id)
     notes_contents = [
         "Python is a nice language which makes programming and life easier.",
         "Another note discussing gRPC services.",
@@ -120,10 +126,12 @@ async def test_search_by_context(
 
     async def search(search_query: str, should_contain: str, negative_search: bool = False) -> bool:
         """Small helper function to make a positive or negative search"""
+        assert user.id
         search_results = await note_repo_facade.search_notes(
             search_type=SearchType.CONTEXT,
             query=search_query,
-            pagination=Pagination(limit=10, offset=0)
+            pagination=Pagination(limit=10, offset=0),
+            ctx=UserContext(user_id=user.id)
         )
         assert search_results[0].content
         if negative_search:
@@ -179,10 +187,12 @@ async def test_search_by_web_lexme_matching(
 
     async def search(search_query: str, should_contain: str, negative_search: bool = False) -> bool:
         """Small helper function to make a positive search"""
+        assert user.id
         search_results = await note_repo_facade.search_notes(
             search_type=SearchType.FULL_TEXT_TITLE,
             query=search_query,
-            pagination=Pagination(limit=10, offset=0)
+            pagination=Pagination(limit=10, offset=0),
+            ctx=UserContext(user_id=user.id)
         )
         assert search_results[0].content
         if negative_search:
@@ -246,10 +256,12 @@ async def test_search_by_similarity(
 
     async def search(search_query: str, should_contain: str) -> bool:
         """Small helper function to make a positive search"""
+        assert user.id
         search_results = await note_repo_facade.search_notes(
             search_type=SearchType.FUZZY,
             query=search_query,
-            pagination=Pagination(limit=10, offset=0)
+            pagination=Pagination(limit=10, offset=0),
+            ctx=UserContext(user_id=user.id)
         )
         assert search_results[0].content
         return should_contain in search_results[0].content
@@ -275,6 +287,7 @@ async def test_search_no_filter(
     which should return notes in creation order
     """
     user = await user_repo.insert(test_user)
+    assert user.id
 
     note_titles = [
         "First note content.",
@@ -294,7 +307,8 @@ async def test_search_no_filter(
     search_results = await note_repo_facade.search_notes(
         search_type=SearchType.NO_SEARCH,
         query="",
-        pagination=Pagination(limit=10, offset=0)
+        pagination=Pagination(limit=10, offset=0),
+        ctx=UserContext(user_id=user.id)
     )
     assert len(search_results) >= 3
     assert search_results[2].content == "First note content."
