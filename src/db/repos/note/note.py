@@ -92,15 +92,15 @@ class NoteRepoFacadeABC(ABC):
     @abstractmethod
     async def delete(
         self,
-        note: NoteEntity,
+        note_id: int,
         ctx: UserContext,
     ) -> Optional[List[NoteEntity]]:
         """delete note
         
         Args:
         -----
-        note: `NoteMetadataEntity`
-            the note
+        note_id: `int`
+            the ID of the note to delete
 
         Returns:
         --------
@@ -230,8 +230,8 @@ class NoteRepoFacade(NoteRepoFacadeABC):
         note_entity.permissions = note.permissions
         return note_entity
 
-    async def delete(self, note: NoteEntity, ctx: UserContext) -> Optional[List[NoteEntity]]:
-        return await self._content_repo.delete(replace(note, embeddings=UNDEFINED, permissions=UNDEFINED))
+    async def delete(self, note_id: int, ctx: UserContext) -> Optional[List[NoteEntity]]:
+        return await self._content_repo.delete(NoteEntity(note_id=note_id, author_id=ctx.user_id))
     
     async def select_by_id(self, note_id: int, ctx: UserContext) -> Optional[NoteEntity]:
         record = await self._content_repo.select_by_id(note_id)
