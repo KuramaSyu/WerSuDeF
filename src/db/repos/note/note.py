@@ -7,7 +7,7 @@ import typing
 import asyncpg
 
 from src.ai.embedding_generator import EmbeddingGenerator, Models
-from src.api.types import Pagination
+from src.api.types import LoggingProvider, Pagination
 from src.db.entities import NoteEntity
 from src.db import Database
 from src.db.entities.note.embedding import NoteEmbeddingEntity
@@ -166,11 +166,13 @@ class NoteRepoFacade(NoteRepoFacadeABC):
         content_repo: NoteContentRepo,
         embedding_repo: NoteEmbeddingRepo,
         permission_repo: NotePermissionRepo,
+        logging_provider: LoggingProvider,
     ):
         self._db = db
         self._content_repo = content_repo
         self._embedding_repo = embedding_repo
         self._permission_repo = permission_repo
+        self.log = logging_provider(__name__, self)
 
     
     async def insert(self, note: NoteEntity):
@@ -184,7 +186,7 @@ class NoteRepoFacade(NoteRepoFacadeABC):
             query, 
             note.title, note.content, note.updated_at, note.author_id
         ))["id"] 
-        print(f"Inserted note with ID: {note_id}")
+        self.log.debug(f"Inserted note with ID: {note_id}")
 
         # insert embeddings
         assert note.embeddings == [] or note.embeddings is UNDEFINED

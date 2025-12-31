@@ -88,7 +88,7 @@ class EmbeddingGenerator(EmbeddingGeneratorABC):
     def generate(self, text: str) -> Tensor:
         start = datetime.now()
         embedding = self.model.encode(text)
-        print(f"Embedding generation took: {datetime.now() - start}")
+        self.log.debug(f"Embedding generation took: {datetime.now() - start}")
         return embedding
 
     @property

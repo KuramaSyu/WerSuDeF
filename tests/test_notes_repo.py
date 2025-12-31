@@ -57,7 +57,6 @@ async def test_update_note(db: Database, note_repo_facade: NoteRepoFacadeABC, us
         updated_at=datetime(2024, 1, 2, 12, 0, 0)
     )
     ret_note = await note_repo_facade.update(updated_note, ctx)
-    print(f"Updated note: {ret_note}; expected: {updated_note}")
     assert ret_note == updated_note
 
 async def test_create_and_remove_note(
